@@ -1,0 +1,193 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  contentPlans  ContentPlan[]
+  rubrics       Rubric[]
+  aiSettings    AISettings?
+  posts         Post[]
+  accounts      Account[]
+  sessions      Session[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SocialNetwork {
+  id       Int    @id @default(autoincrement())
+  slug     String @unique
+  name     String
+  color    String
+  iconName String
+
+  contentPlanNetworks ContentPlanSocialNetwork[]
+  posts               Post[]
+}
+
+model Rubric {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  name          String
+  description   String   @default("")
+  postsPerMonth Int      @default(4)
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentPlanRubrics  ContentPlanRubric[]
+  posts              Post[]
+
+  @@index([userId])
+}
+
+model ContentPlan {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  title        String   @default("")
+  startDate    DateTime @db.Date
+  postsPerWeek Int      @default(5)
+  publishDays  Int[]
+  wishes       String   @default("")
+  status       String   @default("draft")
+  aiProvider   String   @default("openai")
+  aiModel      String   @default("gpt-5.2")
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialNetworks  ContentPlanSocialNetwork[]
+  rubrics         ContentPlanRubric[]
+  posts           Post[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([startDate])
+}
+
+model ContentPlanSocialNetwork {
+  id              String @id @default(uuid()) @db.Uuid
+  contentPlanId   String @db.Uuid
+  socialNetworkId Int
+
+  contentPlan   ContentPlan   @relation(fields: [contentPlanId], references: [id], onDelete: Cascade)
+  socialNetwork SocialNetwork @relation(fields: [socialNetworkId], references: [id])
+
+  @@unique([contentPlanId, socialNetworkId])
+}
+
+model ContentPlanRubric {
+  id            String @id @default(uuid()) @db.Uuid
+  contentPlanId String @db.Uuid
+  rubricId      String @db.Uuid
+  postsCount    Int?
+
+  contentPlan ContentPlan @relation(fields: [contentPlanId], references: [id], onDelete: Cascade)
+  rubric      Rubric      @relation(fields: [rubricId], references: [id])
+
+  @@unique([contentPlanId, rubricId])
+}
+
+model Post {
+  id              String    @id @default(uuid()) @db.Uuid
+  contentPlanId   String    @db.Uuid
+  userId          String    @db.Uuid
+  rubricId        String?   @db.Uuid
+  socialNetworkId Int
+  title           String    @default("")
+  content         String    @default("")
+  hashtags        String    @default("")
+  publishDate     DateTime  @db.Date
+  publishTime     String?
+  status          String    @default("draft")
+  metadata        Json?
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  contentPlan   ContentPlan   @relation(fields: [contentPlanId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rubric        Rubric?       @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  socialNetwork SocialNetwork @relation(fields: [socialNetworkId], references: [id])
+  images        PostImage[]
+
+  @@index([userId, publishDate])
+  @@index([contentPlanId])
+  @@index([socialNetworkId])
+  @@index([publishDate])
+  @@index([userId, socialNetworkId, publishDate])
+}
+
+model PostImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @db.Uuid
+  url       String
+  altText   String   @default("")
+  sortOrder Int      @default(0)
+  width     Int?
+  height    Int?
+  mimeType  String?
+  fileSize  Int?
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model AISettings {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  defaultProvider String   @default("openai")
+  defaultModel    String   @default("gpt-5.2")
+  openaiApiKey    String?
+  anthropicApiKey String?
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(4096)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
