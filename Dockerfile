@@ -4,8 +4,6 @@ WORKDIR /app
 
 # ---- Dependencies ----
 FROM base AS deps
-# Fix DNS issues
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf && echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 COPY package.json ./
 COPY prisma ./prisma/
 RUN npm install --no-audit --no-fund --loglevel=warn && npx prisma generate
