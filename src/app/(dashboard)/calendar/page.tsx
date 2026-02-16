@@ -1,8 +1,9 @@
 import { getSocialNetworks } from "@/actions/content-plan";
 import { CalendarView } from "@/components/calendar/calendar-view";
+import type { SocialNetwork } from "@/types";
 
 export default async function CalendarPage() {
-    const socialNetworks = await getSocialNetworks();
+    const socialNetworks = await getSocialNetworks() as SocialNetwork[];
 
     return (
         <div className="space-y-6">
