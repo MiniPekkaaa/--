@@ -35,9 +35,12 @@ export async function POST(req: NextRequest) {
         });
 
         const filesContext = files.length > 0
-            ? `\n\nЗагруженные файлы пользователя:\n${files.map((f, i) =>
-                `${i + 1}. "${f.originalName}" — ${f.extractedText ? `текст извлечён (${f.extractedText.length} символов)` : "текст не извлечён"}`
-            ).join("\n")}`
+            ? `\n\nЗагруженные файлы пользователя:\n${files.map((f, i) => {
+                if (f.extractedText) {
+                    return `--- Файл ${i + 1}: "${f.originalName}" ---\n${f.extractedText}`;
+                }
+                return `--- Файл ${i + 1}: "${f.originalName}" --- (текст не удалось извлечь)`;
+            }).join("\n\n")}`
             : "";
 
         // Build messages for AI

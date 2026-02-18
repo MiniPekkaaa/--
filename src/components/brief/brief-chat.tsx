@@ -168,17 +168,6 @@ export function BriefChat({ sessionId, initialMessages, initialFiles, welcomeMes
 
         setIsUploading(true);
 
-        // Add user message about file
-        setMessages((prev) => [
-            ...prev,
-            {
-                id: `file-msg-${Date.now()}`,
-                role: "user",
-                content: `📎 Загружен файл: ${file.name}`,
-                createdAt: new Date().toISOString(),
-            },
-        ]);
-
         try {
             const formData = new FormData();
             formData.append("sessionId", sessionId);
@@ -194,8 +183,19 @@ export function BriefChat({ sessionId, initialMessages, initialFiles, welcomeMes
             const result = await res.json();
             setFiles((prev) => [...prev, result]);
 
-            // Now send a chat message so AI responds to the file
-            const autoMsg = `Я загрузил файл "${file.name}". ${result.hasText ? `Текст извлечён (${result.textPreview?.length || 0} символов).` : "Текст не удалось извлечь."}`;
+            // Show system notification about upload
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: `sys-upload-${Date.now()}`,
+                    role: "user",
+                    content: `✅ Файл загружен: ${file.name} (${formatFileSize(file.size)})`,
+                    createdAt: new Date().toISOString(),
+                },
+            ]);
+
+            // Send simple message to AI — it already has the file text in context
+            const autoMsg = `Пользователь загрузил файл "${file.name}".`;
 
             const chatRes = await fetch("/api/brief/chat", {
                 method: "POST",
