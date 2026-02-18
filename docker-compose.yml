@@ -7,9 +7,16 @@ services:
     ports:
       - "${APP_PORT:-8007}:3000"
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://supabase_admin:otlehjoq@db.3r.agency:33770/content-machine?schema=public}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://supabase_admin:otlehjoq@db.3r.agency:33771/content_machine?schema=public}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://139.60.161.156:8007}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-supersecretkey_change_in_production}
       AUTH_TRUST_HOST: "true"
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-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}
+      BRIEF_WELCOME_MESSAGE: ${BRIEF_WELCOME_MESSAGE:-Здравствуйте! 👋 Я помогу вам создать бриф для контент-стратегии. Пришлите мне информацию о вашем проекте — это может быть текст, документ (Word, PDF, Excel) или любой другой материал. Я проанализирую данные и составлю структурированный бриф.}
+    volumes:
+      - uploads_data:/app/uploads
+
+volumes:
+  uploads_data:

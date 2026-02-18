@@ -22,6 +22,7 @@ model User {
   posts         Post[]
   accounts      Account[]
   sessions      Session[]
+  briefSessions BriefSession[]
 
   @@index([email])
 }
@@ -190,4 +191,49 @@ model AISettings {
   updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Briefing System ──
+
+model BriefSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  status    String   @default("active") // active | completed
+  briefText String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages BriefMessage[]
+  files    BriefFile[]
+
+  @@index([userId])
+  @@index([userId, status])
+}
+
+model BriefMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  sessionId String   @db.Uuid
+  role      String   // user | assistant
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  session BriefSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model BriefFile {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String   @db.Uuid
+  originalName  String
+  mimeType      String
+  fileSize      Int
+  storagePath   String
+  extractedText String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  session BriefSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
 }

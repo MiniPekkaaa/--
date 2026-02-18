@@ -13,11 +13,13 @@ import {
     LogOut,
     Zap,
     ChevronDown,
+    MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const mainNav = [
+    { href: "/brief", label: "Начало работы", icon: MessageCircle },
     { href: "/dashboard", label: "Дашборд", icon: LayoutDashboard },
     { href: "/calendar", label: "Календарь", icon: CalendarDays },
 ];
